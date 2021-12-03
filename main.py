@@ -1,5 +1,5 @@
 import math
-from copy import copy
+from copy import copy, deepcopy
 from sympy import Interval
 import matplotlib.pyplot as plt
 import matplotlib.patches as pth
@@ -33,7 +33,7 @@ def div(i1, i2):
     return Interval(min(divs), max(divs))
 
 def sum_matrix(A, B):
-    result = copy(A)
+    result = deepcopy(A)
     for i in range(len(result)):
         result[i] = sum(result[i], B[i])
     return result
@@ -41,13 +41,12 @@ def sum_matrix(A, B):
 def mul_matrix(A, B):
     result = []
     for i in range(len(A[0])):
-        for j in range(1):
-            result.append(Interval(.0, .0))
-            for q in range(len(B)):
-                result[i] = sum(result[i], mul(A[j][q], B[q]))
+        result.append(Interval(.0, .0))
+        for q in range(len(B)):
+            result[i] = sum(result[i], mul(A[i][q], B[q]))
     return result
 
-def deletePart(newX, oldX):
+def union(newX, oldX):
     result = []
     for i in range(len(newX)):
         result.append(Interval(max([newX[i].inf, oldX[i].inf]), min([newX[i].sup, oldX[i].sup])))
@@ -71,8 +70,8 @@ def vizualization(iterations):
     y_max = float(start_iter[1].sup + 0.1)
     ax.set_xlim([x_min, x_max])
     ax.set_ylim([y_min, y_max])
-    plt.xlabel('x')
-    plt.ylabel('y')
+    plt.xlabel('x1')
+    plt.ylabel('x2')
     plt.show()
 
 def plotRadius(iterations):
@@ -88,8 +87,9 @@ def plotRadius(iterations):
     plt.plot(iter, rads)
     plt.show()
 
-def plotDistance(iterations):
-    answer = [1.5, 0]
+def plotDistance(iterations: list):
+    last = iterations[len(iterations) - 1]
+    answer = [(last[0].inf + last[0].sup) / 2, (last[1].inf + last[1].sup) / 2]
     distances = []
     iters = []
     for i in range(len(iterations)):
@@ -102,14 +102,14 @@ def plotDistance(iterations):
     plt.plot(iters, distances)
     plt.show()
 
-A = [[Interval(0, 0), Interval(-.25, .25)], [Interval(.0, .0), Interval(-.375, .375)]] #I - VA
-B = [Interval(1, 2), Interval(.0, .0)] #VB
+A = [[Interval(.0, .0), Interval(-.25, .25)], [Interval(.0, .0), Interval(-.375, .375)]] #I - VA
+B = [Interval(.25, .5), Interval(.125, .25)] #VB
 oldX = [Interval(-3.2, 3.2), Interval(-3.2, 3.2)]
-newX = deletePart(sum_matrix(B, mul_matrix(A, oldX)), oldX)
+newX = union(sum_matrix(B, mul_matrix(A, oldX)), oldX)
 iterations = [oldX, newX]
 while not equal(newX, oldX):
-   oldX = copy(newX)
-   newX = deletePart(sum_matrix(B, mul_matrix(A, oldX)), oldX)
+   oldX = deepcopy(newX)
+   newX = union(sum_matrix(B, mul_matrix(A, oldX)), oldX)
    iterations.append(newX)
 vizualization(iterations)
 plotRadius(iterations)
